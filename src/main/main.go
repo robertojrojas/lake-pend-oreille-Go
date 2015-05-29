@@ -11,7 +11,7 @@ func main() {
 
 	fmt.Printf("Hello From Lake Pend Oreille!")
 
-	lakeDatas, err := models.GetLakeDataRecordsFor("2015_01_01")
+	lakeDatas, err := models.GetDBRecordsFor("2015_01_01")
 	if err != nil {
 		log.Fatal("Apolo we hear ya. Sit Tight!", err)
 		os.Exit(1)

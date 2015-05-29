@@ -16,3 +16,4 @@ func GetDBConnection() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", "./lpo.db")
 	return db, err
 }
+
