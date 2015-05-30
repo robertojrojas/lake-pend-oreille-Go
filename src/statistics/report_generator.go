@@ -86,7 +86,7 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 
 
 func CreateServer() {
-	http.HandleFunc("/report", reportHandler)
+	http.HandleFunc("/reports", reportHandler)
 	http.ListenAndServe(":8888", nil)
 }
 
