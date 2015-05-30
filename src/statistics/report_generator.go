@@ -20,14 +20,13 @@ func GenerateReportDisplay(date string) {
 		}
 
 		if !recordsExist {
-			lakeDatas = models.FetchData(date, dataSourceType)
-		} else {
-			//fmt.Printf("GetDBRecordsFor for %s %s \n", date, dataSourceType)
-			lakeDatas, err = models.GetDBRecordsFor(date, dataSourceType)
-			if err != nil {
-				fmt.Printf("GetDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
-				continue
-			}
+			models.FetchData(date, dataSourceType)
+		}
+
+		lakeDatas, err = models.GetDBRecordsFor(date, dataSourceType)
+		if err != nil {
+			fmt.Printf("GetDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
+			continue
 		}
 
 		meanValue := lakeDatas.Mean()

@@ -213,7 +213,7 @@ func ParseData(dataSourceType string, rawData string) (DataRecs) {
 
 }
 
-func FetchData(date string, dataSourceType string) (DataRecs) {
+func FetchData(date string, dataSourceType string) {
 
 	dateParam := strings.Replace(date, "-", "_", len(date))
 	yearPart  := strings.Split(dateParam, "_")[0]
@@ -228,13 +228,10 @@ func FetchData(date string, dataSourceType string) (DataRecs) {
 			dataSourceType,
 			date,
 			request.Err)
-		return DataRecs{}
 	}
 
 	lakeDatas := ParseData(dataSourceType,request.ToString())
 	StoreRecords(lakeDatas)
-
-	return lakeDatas
 
 }
 
