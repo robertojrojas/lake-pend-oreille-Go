@@ -19,6 +19,9 @@ const (
 	INSERT_DATA_STMT  = "INSERT INTO %s (type, stamp, value) VALUES (?, ?, ?)"
 	COUNT_DATA_QUERY  = "SELECT COUNT(*) FROM %s WHERE type = ? AND stamp LIKE ? || '%'"
 	GET_DATA_QUERY    = "SELECT type, stamp, value FROM %s WHERE type = ? AND stamp LIKE ? || '%s'"
+	TYPE_COL          = "type"
+	STAMP_COL         = "stamp"
+	VALUE_COL         = "col"
 
 )
 
@@ -124,17 +127,14 @@ func Query(queryStr string, args ...interface{}) ([]map[string]string, error) {
 
 	//TODO: Need a better way to handle this
 	findQuery := fmt.Sprintf(GET_DATA_QUERY, LPO_TABLE_NAME, "%")
-
-	fmt.Printf("find Query %s\n", findQuery)
 	fmt.Printf("args %T %v\n", args, args)
+
 	rows, err := db.Query(findQuery, args...)
 	if err != nil {
-		fmt.Println("Query Failed!")
-		log.Fatal(err)
+		log.Fatal("Query Failed!", err)
 		return nil, err
 	}
 	defer rows.Close()
-	fmt.Println("After query")
 
 	retValues := []map[string]string{}
 
@@ -143,12 +143,11 @@ func Query(queryStr string, args ...interface{}) ([]map[string]string, error) {
 		    stamp,
 		    recordedValue string
 		rows.Scan(&dataSource, &stamp, &recordedValue)
-		//fmt.Println(dataSource, stamp, recordedValue)
 
 		currentRow := map[string]string {
-			"type"  : dataSource,
-			"stamp" : stamp,
-			"value" :recordedValue,
+			TYPE_COL  : dataSource,
+			STAMP_COL : stamp,
+			VALUE_COL :recordedValue,
 
 		}
 		retValues = append(retValues, currentRow)

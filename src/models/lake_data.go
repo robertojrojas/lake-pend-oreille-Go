@@ -45,20 +45,20 @@ func (records DataRecs) GetData(recordIdx int) []interface{} {
 
 }
 
-func GetDBRecordsFor(dateForData string) (DataRecs, error) {
+func GetDBRecordsFor(dateForData string, recordType string) (DataRecs, error) {
 
-    returnedRecords, _ := db.Query("", "airtemp", "2015-01-01")
+    returnedRecords, _ := db.Query("", dateForData, recordType)
 
 	lakeDataValues := make([]LakeData, len(returnedRecords))
 
 	for idx, record := range returnedRecords {
-		dateTime := record["stamp"]
+		dateTime := record[db.STAMP_COL]
 		dateTimeParts := strings.Split(dateTime, " ")
 		lakeDataValues[idx] = LakeData {
-			     record["type"],
+			     record[db.TYPE_COL],
 			     dateTimeParts[0],
 			     dateTimeParts[1],
-			     record["value"],
+			     record[db.VALUE_COL],
 		}
 	}
 
