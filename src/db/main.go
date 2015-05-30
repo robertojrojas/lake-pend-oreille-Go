@@ -8,6 +8,7 @@ import (
 )
 
 const (
+
 	LPO_DB_NAME       = "./lpo.db"
 	LPO_TABLE_NAME    = "LAKE_DATA"
     FIND_TABLE_QUERY  = "SELECT name FROM sqlite_master WHERE type = 'table' and name = '%s'"
@@ -15,7 +16,9 @@ const (
 		CREATE TABLE %s ( id INTEGER PRIMARY KEY, type TEXT, stamp TEXT NOT NULL, value INTEGER );
 	    CREATE UNIQUE INDEX typestamp ON %s(type, stamp);
 	`
-	INSERT_DATA_STMT = "INSERT INTO %s (type, stamp, value) VALUES (?, ?, ?)"
+	INSERT_DATA_STMT  = "INSERT INTO %s (type, stamp, value) VALUES (?, ?, ?)"
+	COUNT_DATA_QUERY  = "SELECT COUNT(*) FROM %s WHERE type = ? AND stamp LIKE ? || '%'"
+	GET_DATA_QUERY    = "SELECT type, stamp, value FROM %s WHERE type = ? AND stamp LIKE ? || '%s'"
 
 )
 
@@ -111,7 +114,49 @@ func InsertData(dataToInsert Insertable) (error) {
 	return nil
 }
 
+func Query(queryStr string, args ...interface{}) ([]map[string]string, error) {
 
+	db, err := GetDBConnection()
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
 
+	//TODO: Need a better way to handle this
+	findQuery := fmt.Sprintf(GET_DATA_QUERY, LPO_TABLE_NAME, "%")
+
+	fmt.Printf("find Query %s\n", findQuery)
+	fmt.Printf("args %T %v\n", args, args)
+	rows, err := db.Query(findQuery, args...)
+	if err != nil {
+		fmt.Println("Query Failed!")
+		log.Fatal(err)
+		return nil, err
+	}
+	defer rows.Close()
+	fmt.Println("After query")
+
+	retValues := []map[string]string{}
+
+	for rows.Next() {
+		var dataSource,
+		    stamp,
+		    recordedValue string
+		rows.Scan(&dataSource, &stamp, &recordedValue)
+		//fmt.Println(dataSource, stamp, recordedValue)
+
+		currentRow := map[string]string {
+			"type"  : dataSource,
+			"stamp" : stamp,
+			"value" :recordedValue,
+
+		}
+		retValues = append(retValues, currentRow)
+
+	}
+
+	return retValues, nil
+
+}
 
 

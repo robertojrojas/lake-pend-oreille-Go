@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 	"db"
-	"log"
+	_ "log"
 	"strings"
 )
 
@@ -41,34 +41,32 @@ func (records DataRecs) GetData(recordIdx int) []interface{} {
 	values[1] = formatDate(selectedRecord.DateRecorded, selectedRecord.TimeRecorded)
 	values[2] = selectedRecord.RecordedValue
 
-	fmt.Printf("returning values len(%d)\n", len(values))
-
 	return values
 
 }
 
 func GetDBRecordsFor(dateForData string) (DataRecs, error) {
 
-	dbConnection, err := db.GetDBConnection()
+    returnedRecords, _ := db.Query("", "airtemp", "2015-01-01")
 
-	if err != nil {
-		log.Fatal("Houston we have a problem!")
-		return []LakeData{}, err
+	lakeDataValues := make([]LakeData, len(returnedRecords))
+
+	for idx, record := range returnedRecords {
+		dateTime := record["stamp"]
+		dateTimeParts := strings.Split(dateTime, " ")
+		lakeDataValues[idx] = LakeData {
+			     record["type"],
+			     dateTimeParts[0],
+			     dateTimeParts[1],
+			     record["value"],
+		}
 	}
 
-	defer dbConnection.Close()
-
-	return []LakeData{
-		LakeData{"airtemp","2015_01_01","22:38:52","23.24"},
-		LakeData{"airtemp","2015_01_01","22:48:02","23.30"},
-		LakeData{"airtemp","2015_01_01","22:48:52","23.31"},
-		LakeData{"airtemp","2015_01_01","22:53:02","23.32"},
-	}, nil
+	return lakeDataValues, nil
 
 }
 
 func StoreRecords(inputRecs DataRecs) (error) {
-
 
 	for _, inputRec := range inputRecs {
 		fmt.Printf("Inserting %s, %s, %s\n",
