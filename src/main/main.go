@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
+	_ "fmt"
 //	_ "models"
 //	_ "log"
-//	_ "os"
-	"web"
+	"os"
+	_ "web"
 	"models"
+	_ "strings"
 )
 
 func main() {
@@ -35,19 +36,34 @@ func main() {
 //	}
 //	models.StoreRecords(sampleData)
 
+	var dateParam string
 
-	request := &web.Request{Url: "http://lpo.dt.navy.mil/data/DM/2015/2015_01_01/Air_Temp"}
-	request.Get()
-
-	if request.IsOK() {
-		lakeDatas := models.ParseData("airtemp",request.ToString())
-		for _, lakeData := range lakeDatas {
-			fmt.Printf("%s %s %s\n", lakeData.DateRecorded, lakeData.TimeRecorded, lakeData.RecordedValue)
-		}
-		models.StoreRecords(lakeDatas)
-
+	if len(os.Args) > 1 {
+		dateParam = os.Args[1]
 	} else {
-		fmt.Printf("Problems getting data %s", request.Err)
+		dateParam = "2015-01-01"
 	}
+
+	models.FetchData(dateParam)
+
+
+//	dateParam = strings.Replace(dateParam, "-", "_", len(dateParam))
+//	yearPart := strings.Split(dateParam, "_")[0]
+//
+//	url := fmt.Sprintf(models.ROOT_URL, yearPart, dateParam)
+//
+//	request := &web.Request{Url: "http://lpo.dt.navy.mil/data/DM/2015/2015_01_01/Air_Temp"}
+//	request.Get()
+//
+//	if request.IsOK() {
+//		lakeDatas := models.ParseData("airtemp",request.ToString())
+//		for _, lakeData := range lakeDatas {
+//			fmt.Printf("%s %s %s\n", lakeData.DateRecorded, lakeData.TimeRecorded, lakeData.RecordedValue)
+//		}
+//		models.StoreRecords(lakeDatas)
+//
+//	} else {
+//		fmt.Printf("Problems getting data %s", request.Err)
+//	}
 
 }

@@ -5,7 +5,20 @@ import (
 	"db"
 	_ "log"
 	"strings"
+	"web"
 )
+
+const (
+	// http://lpo.dt.navy.mil/data/DM/2015/2015_01_01/Air_Temp
+	ROOT_URL = "http://lpo.dt.navy.mil/data/DM/%s/%s/%s"
+)
+
+var DATASOURCE_TYPES = []string {
+"Air_Temp",
+"Barometric_Press",
+"Wind_Speed",
+}
+
 
 func init() {
 	fmt.Printf("Initializing Lake Data Model...\n")
@@ -108,6 +121,34 @@ func ParseData(dataSourceType string, rawData string) (DataRecs) {
 	}
 
 	return parsedData
+
+}
+
+func FetchData(date string) {
+
+	dateParam := strings.Replace(date, "-", "_", len(date))
+	yearPart  := strings.Split(dateParam, "_")[0]
+
+	request := &web.Request{}
+
+	for _, dataSourceType := range DATASOURCE_TYPES {
+		url := fmt.Sprintf(ROOT_URL, yearPart, dateParam, dataSourceType)
+
+		request.Url = url
+		request.Get()
+
+		if request.IsOK() {
+			lakeDatas := ParseData(dataSourceType,request.ToString())
+			StoreRecords(lakeDatas)
+		} else {
+			fmt.Printf("Unable to get data for datasourceType: %s , date: %s , error: %s",
+				dataSourceType,
+				date,
+				request.Err)
+		}
+
+		request.Reset()
+	}
 
 }
 

@@ -44,3 +44,10 @@ func (r *Request) ToString() (string) {
 	return string(r.body)
 }
 
+func (r *Request) Reset() {
+	r.Url  = ""
+	r.body = nil
+	r.Err  = nil
+
+}
+
