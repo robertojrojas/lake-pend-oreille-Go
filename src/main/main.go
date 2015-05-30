@@ -25,10 +25,10 @@ func main() {
 	}
 
 	sampleData := []models.LakeData{
-		models.LakeData{"2015_01_01","22:38:52","23.24"},
-		models.LakeData{"2015_01_01","22:48:02","23.30"},
-		models.LakeData{"2015_01_01","22:48:52","23.31"},
-		models.LakeData{"2015_01_01","22:53:02","23.32"},
+		models.LakeData{"airtemp","2015_01_01","22:38:52","23.24"},
+		models.LakeData{"airtemp","2015_01_01","22:48:02","23.30"},
+		models.LakeData{"airtemp","2015_01_01","22:48:52","23.31"},
+		models.LakeData{"airtemp","2015_01_01","22:53:02","23.32"},
 	}
 	models.StoreRecords(sampleData)
 

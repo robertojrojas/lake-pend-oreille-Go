@@ -15,7 +15,7 @@ const (
 		CREATE TABLE %s ( id INTEGER PRIMARY KEY, type TEXT, stamp TEXT NOT NULL, value INTEGER );
 	    CREATE UNIQUE INDEX typestamp ON %s(type, stamp);
 	`
-	INSERT_DATA_STMT = "INSERT INTO %s (value, type, stamp) VALUES (?, ?, ?)"
+	INSERT_DATA_STMT = "INSERT INTO %s (type, stamp, value) VALUES (?, ?, ?)"
 
 )
 
@@ -61,7 +61,7 @@ func CreateTableIfNeeded(tableName string) (bool, error) {
 
 	if !rows.Next() {
 		fmt.Printf("About to create Table %s\n", tableName)
-		sqlStmt := fmt.Sprintf(CREATE_TABLE_STMT, tableName)
+		sqlStmt := fmt.Sprintf(CREATE_TABLE_STMT, tableName, tableName)
 		fmt.Print("creating table with %s", sqlStmt)
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
@@ -90,7 +90,8 @@ func InsertData(dataToInsert Insertable) (error) {
 		log.Fatal(err)
 	}
 
-	stmtStr := fmt.Sprint(INSERT_DATA_STMT, LPO_TABLE_NAME)
+	stmtStr := fmt.Sprintf(INSERT_DATA_STMT, LPO_TABLE_NAME)
+	fmt.Printf("stmtStr %s\n", stmtStr)
 	stmt, err := tx.Prepare(stmtStr)
 	if err != nil {
 		log.Fatal(err)

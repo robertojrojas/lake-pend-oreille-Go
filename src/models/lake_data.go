@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"db"
 	"log"
+	"strings"
 )
 
 func init() {
@@ -11,6 +12,7 @@ func init() {
 }
 
 type LakeData struct {
+	DataSource     string
 	DateRecorded   string
 	TimeRecorded   string
 	RecordedValue  string
@@ -22,14 +24,25 @@ func (records DataRecs) Len() int {
 	return len(records)
 }
 
+func formatDate(dateStr string, timeStr string) (string) {
+
+	dateStr = strings.Replace(dateStr, "_", "-", len(dateStr))
+
+	return dateStr + " " + timeStr
+
+}
+
 func (records DataRecs) GetData(recordIdx int) []interface{} {
 
 	selectedRecord := records[recordIdx]
 	values := make([]interface{}, 3)
 
-	values = append(values,selectedRecord.DateRecorded )
-	values = append(values,selectedRecord.TimeRecorded )
-	values = append(values,selectedRecord.RecordedValue )
+	values[0] = selectedRecord.DataSource
+	values[1] = formatDate(selectedRecord.DateRecorded, selectedRecord.TimeRecorded)
+	values[2] = selectedRecord.RecordedValue
+
+	fmt.Printf("returning values len(%d)\n", len(values))
+
 	return values
 
 }
@@ -46,10 +59,10 @@ func GetDBRecordsFor(dateForData string) (DataRecs, error) {
 	defer dbConnection.Close()
 
 	return []LakeData{
-		LakeData{"2015_01_01","22:38:52","23.24"},
-		LakeData{"2015_01_01","22:48:02","23.30"},
-		LakeData{"2015_01_01","22:48:52","23.31"},
-		LakeData{"2015_01_01","22:53:02","23.32"},
+		LakeData{"airtemp","2015_01_01","22:38:52","23.24"},
+		LakeData{"airtemp","2015_01_01","22:48:02","23.30"},
+		LakeData{"airtemp","2015_01_01","22:48:52","23.31"},
+		LakeData{"airtemp","2015_01_01","22:53:02","23.32"},
 	}, nil
 
 }
@@ -58,7 +71,6 @@ func StoreRecords(inputRecs DataRecs) (error) {
 
 
 	for _, inputRec := range inputRecs {
-
 		fmt.Printf("Inserting %s, %s, %s\n",
 			       inputRec.DateRecorded,
 			       inputRec.TimeRecorded,
@@ -66,6 +78,8 @@ func StoreRecords(inputRecs DataRecs) (error) {
 
 	}
 
-	return nil
+	err := db.InsertData(inputRecs)
+
+	return err
 }
 
