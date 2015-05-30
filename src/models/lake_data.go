@@ -16,7 +16,25 @@ type LakeData struct {
 	RecordedValue  string
 }
 
-func GetDBRecordsFor(dateForData string) ([]LakeData, error) {
+type DataRecs []LakeData
+
+func (records DataRecs) Len() int {
+	return len(records)
+}
+
+func (records DataRecs) GetData(recordIdx int) []interface{} {
+
+	selectedRecord := records[recordIdx]
+	values := make([]interface{}, 3)
+
+	values = append(values,selectedRecord.DateRecorded )
+	values = append(values,selectedRecord.TimeRecorded )
+	values = append(values,selectedRecord.RecordedValue )
+	return values
+
+}
+
+func GetDBRecordsFor(dateForData string) (DataRecs, error) {
 
 	dbConnection, err := db.GetDBConnection()
 
@@ -36,20 +54,12 @@ func GetDBRecordsFor(dateForData string) ([]LakeData, error) {
 
 }
 
-func StoreRecords(inputRecs []LakeData) (error) {
+func StoreRecords(inputRecs DataRecs) (error) {
 
-	dbConnection, err := db.GetDBConnection()
-
-	if err != nil {
-		log.Fatal("Houston we have a problem!")
-		return err
-	}
-
-	defer dbConnection.Close()
 
 	for _, inputRec := range inputRecs {
 
-		fmt.Printf("Inserting %s, %s, %s",
+		fmt.Printf("Inserting %s, %s, %s\n",
 			       inputRec.DateRecorded,
 			       inputRec.TimeRecorded,
 			       inputRec.RecordedValue)
