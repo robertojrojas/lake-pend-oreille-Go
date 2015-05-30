@@ -198,13 +198,14 @@ func ParseData(dataSourceType string, rawData string) (DataRecs) {
 			        TimeRecorded:columns[1],
 	    }
 
-		// Sometimes there is an extra 'space' in the data
-		// and it causes the columns to be 4 instead of 3
-		if len(columns) > 3 {
-			currentLakeData.RecordedValue = columns[3]
-		} else {
-			currentLakeData.RecordedValue = columns[2]
+		// Sometimes there is an extra 'space' after the second column
+		// which causes the columns to be more then 3
+		var lastColumns string
+		for idx := 2; idx < len(columns); idx++ {
+			lastColumns += columns[idx];
 		}
+		currentLakeData.RecordedValue = lastColumns
+
 		parsedData = append(parsedData, currentLakeData)
 	}
 
