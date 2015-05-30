@@ -7,6 +7,10 @@ import (
 
 func GenerateReportDisplay(date string) {
 
+
+
+	reportValues := map[string][]float64{}
+
 	for _, dataSourceType := range models.DATASOURCE_TYPES {
 
 		var lakeDatas models.DataRecs
@@ -30,12 +34,30 @@ func GenerateReportDisplay(date string) {
 		}
 
 		meanValue := lakeDatas.Mean()
-		fmt.Printf("The MEAN for  %s %s is %f\n", dataSourceType, date, meanValue)
+		//fmt.Printf("The MEAN for  %s %s is %f\n", dataSourceType, date, meanValue)
 
 		medianValue := lakeDatas.Median()
-		fmt.Printf("The MEDIAN for %s %s is %f\n", dataSourceType, date, medianValue)
+		//fmt.Printf("The MEDIAN for %s %s is %f\n", dataSourceType, date, medianValue)
 
+		reportValues[dataSourceType] = []float64{
+			meanValue,
+			medianValue,
+		}
 	}
+
+	fmt.Printf("================================================================ \n")
+	fmt.Printf("            STATISTICAL ANALYSIS For %s  \n", date)
+	fmt.Printf("================================================================ \n")
+	fmt.Printf("        Air Temperature    Barometric Pressuare   Wind Speed     \n")
+    fmt.Printf("  MEAN     %.2f                %.2f                %.2f          \n",
+		              reportValues[models.DATASOURCE_TYPES[0]][0],
+		              reportValues[models.DATASOURCE_TYPES[1]][0],
+		              reportValues[models.DATASOURCE_TYPES[2]][0]                   )
+	fmt.Printf(" MEDIAN    %.2f                %.2f                %.2f           \n",
+					  reportValues[models.DATASOURCE_TYPES[0]][1],
+					  reportValues[models.DATASOURCE_TYPES[1]][1],
+					  reportValues[models.DATASOURCE_TYPES[2]][1]   )
+	fmt.Printf("================================================================ \n")
 
 
 }

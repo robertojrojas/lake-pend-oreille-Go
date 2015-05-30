@@ -76,7 +76,7 @@ func CreateTableIfNeeded(tableName string) (bool, error) {
 		}
 		return true, nil
 	} else {
-		fmt.Printf("Table %s was created already!\n", LPO_DB_NAME)
+		//fmt.Printf("Table %s was created already!\n", LPO_DB_NAME)
 	}
 
 	return false, nil

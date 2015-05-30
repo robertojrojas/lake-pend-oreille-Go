@@ -23,7 +23,7 @@ var DATASOURCE_TYPES = []string {
 
 
 func init() {
-	fmt.Printf("Initializing Lake Data Model...\n")
+	//fmt.Printf("Initializing Lake Data Model...\n")
 }
 
 type LakeData struct {
