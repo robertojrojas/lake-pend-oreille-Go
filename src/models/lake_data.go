@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	fmt.Printf("Initializing Lake Data Model...")
+	fmt.Printf("Initializing Lake Data Model...\n")
 }
 
 type LakeData struct {

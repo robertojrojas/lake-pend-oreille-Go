@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	fmt.Printf("Hello From Lake Pend Oreille!")
+	fmt.Printf("Hello From Lake Pend Oreille!\n")
 
 	lakeDatas, err := models.GetDBRecordsFor("2015_01_01")
 	if err != nil {

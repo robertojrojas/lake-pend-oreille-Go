@@ -10,7 +10,7 @@ import (
 const (
 	LPO_DB_NAME       = "./lpo.db"
 	LPO_TABLE_NAME    = "LAKE_DATA"
-    FIND_TABLE_QUERY  = "SELECT name FROM sqlite_master WHERE type = 'table' and name = %s"
+    FIND_TABLE_QUERY  = "SELECT name FROM sqlite_master WHERE type = 'table' and name = '%s'"
 	CREATE_TABLE_STMT = `
 		CREATE TABLE %s ( id INTEGER PRIMARY KEY, type TEXT, stamp TEXT NOT NULL, value INTEGER );
 	    CREATE UNIQUE INDEX typestamp ON %s(type, stamp);
@@ -25,7 +25,9 @@ type Insertable interface {
 }
 
 func init() {
-	fmt.Printf("Initializing db...")
+	fmt.Printf("Initializing db...\n")
+	CreateTableIfNeeded(LPO_TABLE_NAME)
+
 }
 
 func GetDBConnection() (*sql.DB, error) {
@@ -40,7 +42,7 @@ func GetDBConnection() (*sql.DB, error) {
   Returns true if the table was create, otherwise false.
   If there are any errors, false and the error are returned
 */
-func TableExists(tableName string) (bool, error) {
+func CreateTableIfNeeded(tableName string) (bool, error) {
 
 	db, err := GetDBConnection()
 	if err != nil {
@@ -48,7 +50,8 @@ func TableExists(tableName string) (bool, error) {
 		return false, err
 	}
 
-	findTableQuery := fmt.Sprint(FIND_TABLE_QUERY, tableName)
+	findTableQuery := fmt.Sprintf(FIND_TABLE_QUERY, tableName)
+	fmt.Printf("Find table with query | %s |\n", findTableQuery)
 	rows, err := db.Query(findTableQuery)
 	defer rows.Close()
 	if err != nil {
@@ -57,13 +60,17 @@ func TableExists(tableName string) (bool, error) {
 	}
 
 	if !rows.Next() {
-		sqlStmt := fmt.Sprint(CREATE_TABLE_STMT, LPO_TABLE_NAME)
+		fmt.Printf("About to create Table %s\n", tableName)
+		sqlStmt := fmt.Sprintf(CREATE_TABLE_STMT, tableName)
+		fmt.Print("creating table with %s", sqlStmt)
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
 			log.Printf("%q: %s\n", err, sqlStmt)
 			return false, err
 		}
 		return true, nil
+	} else {
+		fmt.Printf("Table %s was created already!\n", LPO_DB_NAME)
 	}
 
 	return false, nil

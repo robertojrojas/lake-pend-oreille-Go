@@ -24,6 +24,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+*.db
 
 # JetBrains WebStorm files
 .idea/
