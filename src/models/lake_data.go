@@ -6,6 +6,7 @@ import (
 	_ "log"
 	"strings"
 	"web"
+	"strconv"
 )
 
 const (
@@ -37,14 +38,6 @@ func (records DataRecs) Len() int {
 	return len(records)
 }
 
-func formatDate(dateStr string, timeStr string) (string) {
-
-	dateStr = strings.Replace(dateStr, "_", "-", len(dateStr))
-
-	return dateStr + " " + timeStr
-
-}
-
 func (records DataRecs) GetData(recordIdx int) []interface{} {
 
 	selectedRecord := records[recordIdx]
@@ -55,6 +48,41 @@ func (records DataRecs) GetData(recordIdx int) []interface{} {
 	values[2] = selectedRecord.RecordedValue
 
 	return values
+
+}
+
+
+func (records DataRecs) Mean() (float64) {
+
+	total := 0.0
+	for _, record := range records {
+		//fmt.Printf("converting to float: %s", record.RecordedValue)
+		recordedValue, err := strconv.ParseFloat(record.RecordedValue, 64)
+		if err != nil {
+			recordedValue = 0.0
+		}
+		total += recordedValue
+	}
+
+	if total == 0.0 {
+		return total
+	}
+
+	meanValue := total / float64(len(records))
+	return meanValue
+}
+
+func (records DataRecs) Median() (float64) {
+
+	return 3.5
+}
+
+
+func formatDate(dateStr string, timeStr string) (string) {
+
+	dateStr = strings.Replace(dateStr, "_", "-", len(dateStr))
+
+	return dateStr + " " + timeStr
 
 }
 

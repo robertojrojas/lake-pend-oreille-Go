@@ -8,6 +8,7 @@ import (
 	_ "web"
 	"models"
 	_ "strings"
+	"fmt"
 )
 
 func main() {
@@ -44,7 +45,13 @@ func main() {
 		dateParam = "2015-01-01"
 	}
 
-	models.FetchData(dateParam)
+	//models.FetchData(dateParam)
+
+	lakeDatas, _ := models.GetDBRecordsFor("Air_Temp", dateParam)
+	meanValue := lakeDatas.Mean()
+	fmt.Printf("The MEAN for %s is %f", dateParam, meanValue)
+
+
 
 
 //	dateParam = strings.Replace(dateParam, "-", "_", len(dateParam))
