@@ -49,7 +49,10 @@ func main() {
 
 	lakeDatas, _ := models.GetDBRecordsFor("Air_Temp", dateParam)
 	meanValue := lakeDatas.Mean()
-	fmt.Printf("The MEAN for %s is %f", dateParam, meanValue)
+	fmt.Printf("The MEAN for %s is %f\n", dateParam, meanValue)
+
+	medianValue := lakeDatas.Median()
+	fmt.Printf("The MEDIAN for %s is %f\n", dateParam, medianValue)
 
 
 

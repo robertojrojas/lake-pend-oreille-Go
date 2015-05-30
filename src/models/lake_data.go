@@ -7,6 +7,7 @@ import (
 	"strings"
 	"web"
 	"strconv"
+	"sort"
 )
 
 const (
@@ -34,6 +35,13 @@ type LakeData struct {
 
 type DataRecs []LakeData
 
+
+/*
+
+    #####  db.Insertable Interface Impl ######
+
+*/
+
 func (records DataRecs) Len() int {
 	return len(records)
 }
@@ -51,16 +59,17 @@ func (records DataRecs) GetData(recordIdx int) []interface{} {
 
 }
 
+/*
 
+    #####  statistics.Mean Interface Impl ######
+
+*/
 func (records DataRecs) Mean() (float64) {
 
 	total := 0.0
 	for _, record := range records {
 		//fmt.Printf("converting to float: %s", record.RecordedValue)
-		recordedValue, err := strconv.ParseFloat(record.RecordedValue, 64)
-		if err != nil {
-			recordedValue = 0.0
-		}
+		recordedValue := fromStringToFloat(record.RecordedValue)
 		total += recordedValue
 	}
 
@@ -72,19 +81,66 @@ func (records DataRecs) Mean() (float64) {
 	return meanValue
 }
 
+/*
+
+    #####  statistics.Mediam Interface Impl ######
+
+*/
 func (records DataRecs) Median() (float64) {
 
-	return 3.5
+
+	medianValue := 0.0
+
+	// sort the numbers from lowest to highest
+	sort.Sort(records)
+
+	numberOfItems := len(records)
+
+	// For an even number of values, calculate the average of the two central numbers
+	if numberOfItems % 2 == 0 {
+
+		firstIdx := numberOfItems / 2
+		secondIdx := firstIdx + 1
+
+		fmt.Printf(" numberOfItems %d  idx1st %d 2ndidx %d\n", numberOfItems, firstIdx, secondIdx)
+		recordedValueFirst  := fromStringToFloat(records[firstIdx].RecordedValue)
+		recordedValueSecond := fromStringToFloat(records[secondIdx].RecordedValue)
+
+		if recordedValueSecond == 0.0 { // To avoid Division by Zero just return 0.0
+			return 0.0
+		}
+		fmt.Printf("Odd number Median %f %f\n", recordedValueFirst, recordedValueSecond)
+		medianValue = (recordedValueFirst + recordedValueSecond) / float64(2)
+		fmt.Printf("Meian value is %f \n", medianValue)
+
+
+	} else { // For an odd number of values, just take the middle number
+
+		idx := (numberOfItems / 2) + 1
+		fmt.Printf(" numberOfItems %d  idx %d", numberOfItems, idx)
+		medianValue = fromStringToFloat(records[idx].RecordedValue)
+		fmt.Printf("Meian value is %f \n", medianValue)
+	}
+
+	return medianValue
 }
 
+/*
+	 #####  sort.Interface Impl ######
+*/
 
-func formatDate(dateStr string, timeStr string) (string) {
-
-	dateStr = strings.Replace(dateStr, "_", "-", len(dateStr))
-
-	return dateStr + " " + timeStr
-
+func (records DataRecs) Swap(i, j int) {
+	records[i], records[j] = records[j], records[i]
 }
+
+func (records DataRecs) Less(i, j int) bool {
+
+	leftValue := fromStringToFloat(records[i].RecordedValue)
+	rightValue := fromStringToFloat(records[j].RecordedValue)
+
+	return leftValue < rightValue
+}
+
 
 func GetDBRecordsFor(dateForData string, recordType string) (DataRecs, error) {
 
@@ -179,4 +235,30 @@ func FetchData(date string) {
 	}
 
 }
+
+/*
+	#### PRIVATE METHODS
+*/
+
+func formatDate(dateStr string, timeStr string) (string) {
+
+	dateStr = strings.Replace(dateStr, "_", "-", len(dateStr))
+
+	return dateStr + " " + timeStr
+
+}
+
+func fromStringToFloat(floatStr string) (float64) {
+
+	if floatStr == "" {
+		return 0.0
+	}
+	convertedValue, err := strconv.ParseFloat(floatStr, 64)
+	if err != nil {
+		convertedValue = 0.0
+	}
+
+	return convertedValue
+}
+
 
