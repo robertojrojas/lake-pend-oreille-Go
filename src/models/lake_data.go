@@ -81,3 +81,33 @@ func StoreRecords(inputRecs DataRecs) (error) {
 	return err
 }
 
+func ParseData(dataSourceType string, rawData string) (DataRecs) {
+
+	parsedData := []LakeData{}
+
+	for _, line  := range strings.Split(rawData, "\n") {
+		if line == "" {
+			continue
+		}
+
+		columns := strings.Split(line, " ")
+		currentLakeData := LakeData{
+			        DataSource:dataSourceType,
+			        DateRecorded:columns[0],
+			        TimeRecorded:columns[1],
+	    }
+
+		// Sometimes there is an extra 'space' in the data
+		// and it causes the columns to be 4 instead of 3
+		if len(columns) > 3 {
+			currentLakeData.RecordedValue = columns[3]
+		} else {
+			currentLakeData.RecordedValue = columns[2]
+		}
+		parsedData = append(parsedData, currentLakeData)
+	}
+
+	return parsedData
+
+}
+

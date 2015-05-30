@@ -6,6 +6,7 @@ import (
 //	_ "log"
 //	_ "os"
 	"web"
+	"models"
 )
 
 func main() {
@@ -39,7 +40,12 @@ func main() {
 	request.Get()
 
 	if request.IsOK() {
-		fmt.Printf("Data [%s]\n", request.ToString())
+		lakeDatas := models.ParseData("airtemp",request.ToString())
+		for _, lakeData := range lakeDatas {
+			fmt.Printf("%s %s %s\n", lakeData.DateRecorded, lakeData.TimeRecorded, lakeData.RecordedValue)
+		}
+		models.StoreRecords(lakeDatas)
+
 	} else {
 		fmt.Printf("Problems getting data %s", request.Err)
 	}
