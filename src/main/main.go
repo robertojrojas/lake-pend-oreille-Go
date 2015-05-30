@@ -11,9 +11,11 @@ func main() {
 
 	if len(os.Args) > 1 {
 		dateParam = os.Args[1]
+		statistics.GenerateReportDisplay(dateParam)
 	} else {
 		dateParam = "2015-01-01"
+		statistics.CreateServer()
 	}
-	statistics.GenerateReportDisplay(dateParam)
+
 
 }

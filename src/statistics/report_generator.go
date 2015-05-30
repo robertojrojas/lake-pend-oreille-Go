@@ -3,43 +3,16 @@ package statistics
 import (
 	"models"
 	"fmt"
+	"net/http"
+	"encoding/json"
 )
 
 func GenerateReportDisplay(date string) {
 
+	reportValues, err := GenerateReport(date)
 
-
-	reportValues := map[string][]float64{}
-
-	for _, dataSourceType := range models.DATASOURCE_TYPES {
-
-		var lakeDatas models.DataRecs
-
-		//fmt.Printf("Checking records for %s %s \n", date, dataSourceType)
-		recordsExist, err := models.CheckDBRecordsFor(date, dataSourceType)
-
-		if err != nil {
-			fmt.Printf("CheckDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
-			continue
-		}
-
-		if !recordsExist {
-			models.FetchData(date, dataSourceType)
-		}
-
-		lakeDatas, err = models.GetDBRecordsFor(date, dataSourceType)
-		if err != nil {
-			fmt.Printf("GetDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
-			continue
-		}
-
-		meanValue := lakeDatas.Mean()
-		medianValue := lakeDatas.Median()
-
-		reportValues[dataSourceType] = []float64{
-			meanValue,
-			medianValue,
-		}
+	if err != nil {
+		panic(err)
 	}
 
 	fmt.Printf("================================================================ \n")
@@ -58,3 +31,63 @@ func GenerateReportDisplay(date string) {
 
 
 }
+
+func GenerateReport(date string) (map[string][]float64, error) {
+
+	reportValues := map[string][]float64{}
+
+	for _, dataSourceType := range models.DATASOURCE_TYPES {
+
+		var lakeDatas models.DataRecs
+
+		//fmt.Printf("Checking records for %s %s \n", date, dataSourceType)
+		recordsExist, err := models.CheckDBRecordsFor(date, dataSourceType)
+
+		if err != nil {
+			fmt.Printf("CheckDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
+			return nil, err
+		}
+
+		if !recordsExist {
+			models.FetchData(date, dataSourceType)
+		}
+
+		lakeDatas, err = models.GetDBRecordsFor(date, dataSourceType)
+		if err != nil {
+			fmt.Printf("GetDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
+			return nil, err
+		}
+
+		meanValue := lakeDatas.Mean()
+		medianValue := lakeDatas.Median()
+
+		reportValues[dataSourceType] = []float64{
+			meanValue,
+			medianValue,
+		}
+	}
+
+	return reportValues, nil
+
+}
+
+func reportHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	date := r.Form["date"][0]
+
+	p, err := GenerateReport(date)
+	if err != nil {
+		http.Error(w, "File not found", http.StatusInternalServerError)
+	} else {
+		jsonEnc := json.NewEncoder(w)
+		jsonEnc.Encode(p)
+	}
+}
+
+
+func CreateServer() {
+	http.HandleFunc("/report", reportHandler)
+	http.ListenAndServe(":8888", nil)
+}
+
+
