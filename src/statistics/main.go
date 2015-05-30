@@ -1,4 +1,4 @@
-package main
+package statistics
 
 import (
 
@@ -31,5 +31,7 @@ type MeanCalculation interface {
 type MedianCalculation interface {
 	Median() (float32)
 }
+
+
 
 

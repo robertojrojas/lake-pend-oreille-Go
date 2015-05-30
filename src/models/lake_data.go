@@ -102,24 +102,24 @@ func (records DataRecs) Median() (float64) {
 		firstIdx := numberOfItems / 2
 		secondIdx := firstIdx + 1
 
-		fmt.Printf(" numberOfItems %d  idx1st %d 2ndidx %d\n", numberOfItems, firstIdx, secondIdx)
+		//fmt.Printf(" numberOfItems %d  idx1st %d 2ndidx %d\n", numberOfItems, firstIdx, secondIdx)
 		recordedValueFirst  := fromStringToFloat(records[firstIdx].RecordedValue)
 		recordedValueSecond := fromStringToFloat(records[secondIdx].RecordedValue)
 
 		if recordedValueSecond == 0.0 { // To avoid Division by Zero just return 0.0
 			return 0.0
 		}
-		fmt.Printf("Odd number Median %f %f\n", recordedValueFirst, recordedValueSecond)
+		//fmt.Printf("Odd number Median %f %f\n", recordedValueFirst, recordedValueSecond)
 		medianValue = (recordedValueFirst + recordedValueSecond) / float64(2)
-		fmt.Printf("Meian value is %f \n", medianValue)
+		//fmt.Printf("Meian value is %f \n", medianValue)
 
 
 	} else { // For an odd number of values, just take the middle number
 
 		idx := (numberOfItems / 2) + 1
-		fmt.Printf(" numberOfItems %d  idx %d", numberOfItems, idx)
+		//fmt.Printf(" numberOfItems %d  idx %d", numberOfItems, idx)
 		medianValue = fromStringToFloat(records[idx].RecordedValue)
-		fmt.Printf("Meian value is %f \n", medianValue)
+		//fmt.Printf("Meian value is %f \n", medianValue)
 	}
 
 	return medianValue
@@ -144,7 +144,11 @@ func (records DataRecs) Less(i, j int) bool {
 
 func GetDBRecordsFor(dateForData string, recordType string) (DataRecs, error) {
 
-    returnedRecords, _ := db.Query("", dateForData, recordType)
+    returnedRecords, err := db.Query("", recordType, dateForData)
+
+	if err != nil {
+		return nil, err
+	}
 
 	lakeDataValues := make([]LakeData, len(returnedRecords))
 
@@ -163,15 +167,15 @@ func GetDBRecordsFor(dateForData string, recordType string) (DataRecs, error) {
 
 }
 
+func CheckDBRecordsFor(date string, recordType string) (bool, error) {
+
+	recordCount, err := db.CountQuery(recordType, date)
+	return recordCount > 0, err
+
+}
+
+
 func StoreRecords(inputRecs DataRecs) (error) {
-
-	for _, inputRec := range inputRecs {
-		fmt.Printf("Inserting %s, %s, %s\n",
-			       inputRec.DateRecorded,
-			       inputRec.TimeRecorded,
-			       inputRec.RecordedValue)
-
-	}
 
 	err := db.InsertData(inputRecs)
 
@@ -208,31 +212,28 @@ func ParseData(dataSourceType string, rawData string) (DataRecs) {
 
 }
 
-func FetchData(date string) {
+func FetchData(date string, dataSourceType string) (DataRecs) {
 
 	dateParam := strings.Replace(date, "-", "_", len(date))
 	yearPart  := strings.Split(dateParam, "_")[0]
 
 	request := &web.Request{}
+	url := fmt.Sprintf(ROOT_URL, yearPart, dateParam, dataSourceType)
+	request.Url = url
+	request.Get()
 
-	for _, dataSourceType := range DATASOURCE_TYPES {
-		url := fmt.Sprintf(ROOT_URL, yearPart, dateParam, dataSourceType)
-
-		request.Url = url
-		request.Get()
-
-		if request.IsOK() {
-			lakeDatas := ParseData(dataSourceType,request.ToString())
-			StoreRecords(lakeDatas)
-		} else {
-			fmt.Printf("Unable to get data for datasourceType: %s , date: %s , error: %s",
-				dataSourceType,
-				date,
-				request.Err)
-		}
-
-		request.Reset()
+	if !request.IsOK() {
+		fmt.Printf("Unable to get data for datasourceType: %s , date: %s , error: %s",
+			dataSourceType,
+			date,
+			request.Err)
+		return DataRecs{}
 	}
+
+	lakeDatas := ParseData(dataSourceType,request.ToString())
+	StoreRecords(lakeDatas)
+
+	return lakeDatas
 
 }
 

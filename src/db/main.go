@@ -17,7 +17,7 @@ const (
 	    CREATE UNIQUE INDEX typestamp ON %s(type, stamp);
 	`
 	INSERT_DATA_STMT  = "INSERT INTO %s (type, stamp, value) VALUES (?, ?, ?)"
-	COUNT_DATA_QUERY  = "SELECT COUNT(*) FROM %s WHERE type = ? AND stamp LIKE ? || '%'"
+	COUNT_DATA_QUERY  = "SELECT COUNT(*) as recCount FROM %s WHERE type = ? AND stamp LIKE ? || '%s'"
 	GET_DATA_QUERY    = "SELECT type, stamp, value FROM %s WHERE type = ? AND stamp LIKE ? || '%s'"
 	TYPE_COL          = "type"
 	STAMP_COL         = "stamp"
@@ -31,7 +31,7 @@ type Insertable interface {
 }
 
 func init() {
-	fmt.Printf("Initializing db...\n")
+	//fmt.Printf("Initializing db...\n")
 	CreateTableIfNeeded(LPO_TABLE_NAME)
 
 }
@@ -57,7 +57,7 @@ func CreateTableIfNeeded(tableName string) (bool, error) {
 	}
 
 	findTableQuery := fmt.Sprintf(FIND_TABLE_QUERY, tableName)
-	fmt.Printf("Find table with query | %s |\n", findTableQuery)
+	//fmt.Printf("Find table with query | %s |\n", findTableQuery)
 	rows, err := db.Query(findTableQuery)
 	defer rows.Close()
 	if err != nil {
@@ -66,9 +66,9 @@ func CreateTableIfNeeded(tableName string) (bool, error) {
 	}
 
 	if !rows.Next() {
-		fmt.Printf("About to create Table %s\n", tableName)
+		//fmt.Printf("About to create Table %s\n", tableName)
 		sqlStmt := fmt.Sprintf(CREATE_TABLE_STMT, tableName, tableName)
-		fmt.Print("creating table with %s", sqlStmt)
+		//fmt.Print("creating table with %s", sqlStmt)
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
 			log.Printf("%q: %s\n", err, sqlStmt)
@@ -97,7 +97,7 @@ func InsertData(dataToInsert Insertable) (error) {
 	}
 
 	stmtStr := fmt.Sprintf(INSERT_DATA_STMT, LPO_TABLE_NAME)
-	fmt.Printf("stmtStr %s\n", stmtStr)
+	//fmt.Printf("stmtStr %s\n", stmtStr)
 	stmt, err := tx.Prepare(stmtStr)
 	if err != nil {
 		log.Fatal(err)
@@ -127,7 +127,7 @@ func Query(queryStr string, args ...interface{}) ([]map[string]string, error) {
 
 	//TODO: Need a better way to handle this
 	findQuery := fmt.Sprintf(GET_DATA_QUERY, LPO_TABLE_NAME, "%")
-	fmt.Printf("args %T %v\n", args, args)
+	//fmt.Printf("args %T %v\n", args, args)
 
 	rows, err := db.Query(findQuery, args...)
 	if err != nil {
@@ -157,5 +157,35 @@ func Query(queryStr string, args ...interface{}) ([]map[string]string, error) {
 	return retValues, nil
 
 }
+
+func CountQuery(args ...interface{}) (int, error) {
+
+	db, err := GetDBConnection()
+	if err != nil {
+		log.Fatal(err)
+		return 0, err
+	}
+
+	//TODO: Need a better way to handle this
+	findQuery := fmt.Sprintf(COUNT_DATA_QUERY, LPO_TABLE_NAME, "%")
+	//fmt.Printf("args %T %v %s\n", args, args, findQuery)
+
+	rows, err := db.Query(findQuery, args...)
+	if err != nil {
+		log.Fatal("Query Failed!", err)
+		return 0, err
+	}
+	defer rows.Close()
+
+	var count int
+	for rows.Next() {
+		rows.Scan(&count)
+	}
+
+	//fmt.Printf("CountQuery %d %v\n", count, args)
+	return count, nil
+
+}
+
 
 
