@@ -34,10 +34,7 @@ func GenerateReportDisplay(date string) {
 		}
 
 		meanValue := lakeDatas.Mean()
-		//fmt.Printf("The MEAN for  %s %s is %f\n", dataSourceType, date, meanValue)
-
 		medianValue := lakeDatas.Median()
-		//fmt.Printf("The MEDIAN for %s %s is %f\n", dataSourceType, date, medianValue)
 
 		reportValues[dataSourceType] = []float64{
 			meanValue,
