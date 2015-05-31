@@ -11,40 +11,51 @@ import (
 const (
 	MEAN   = "mean"
 	MEDIAN = "median"
+	DATE_FIELD = "date"
 )
 
 var INVALID_URL = map[string]string{
 	"Error": "Invalid URL",
 }
 
+type ReportData struct {
+	Mean float64
+	Median float64
+}
+
+type ReportOutput struct {
+	Date string
+	ReportData map[string]ReportData
+}
+
 func GenerateReportDisplay(date string) {
 
-	reportValues, err := GenerateReport(date)
+	reportOutput, err := GenerateReport(date)
 
 	if err != nil {
 		panic(err)
 	}
-
+	reportValues := reportOutput.ReportData
 	fmt.Printf("================================================================ \n")
-	fmt.Printf("            STATISTICAL ANALYSIS For %s  \n", date)
+	fmt.Printf("            STATISTICAL ANALYSIS For %s  \n", reportOutput.Date     )
 	fmt.Printf("================================================================ \n")
 	fmt.Printf("        Air Temperature    Barometric Pressuare   Wind Speed     \n")
     fmt.Printf("  MEAN     %.2f                %.2f                %.2f          \n",
-		              reportValues[models.DATASOURCE_TYPES[0]][MEAN],
-		              reportValues[models.DATASOURCE_TYPES[1]][MEAN],
-		              reportValues[models.DATASOURCE_TYPES[2]][MEAN]                   )
+		              reportValues[models.DATASOURCE_TYPES[0]].Mean,
+		              reportValues[models.DATASOURCE_TYPES[1]].Mean,
+		              reportValues[models.DATASOURCE_TYPES[2]].Mean                   )
 	fmt.Printf(" MEDIAN    %.2f                %.2f                %.2f           \n",
-					  reportValues[models.DATASOURCE_TYPES[0]][MEDIAN],
-					  reportValues[models.DATASOURCE_TYPES[1]][MEDIAN],
-					  reportValues[models.DATASOURCE_TYPES[2]][MEDIAN]   )
+					  reportValues[models.DATASOURCE_TYPES[0]].Median,
+					  reportValues[models.DATASOURCE_TYPES[1]].Median,
+					  reportValues[models.DATASOURCE_TYPES[2]].Median   )
 	fmt.Printf("================================================================ \n")
 
 
 }
 
-func GenerateReport(date string) (map[string]map[string]float64, error) {
+func GenerateReport(date string) (ReportOutput, error) {
 
-	reportValues := map[string]map[string]float64{}
+	reportValues := map[string]ReportData{}
 
 	for _, dataSourceType := range models.DATASOURCE_TYPES {
 
@@ -55,7 +66,7 @@ func GenerateReport(date string) (map[string]map[string]float64, error) {
 
 		if err != nil {
 			fmt.Printf("CheckDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
-			return nil, err
+			return ReportOutput{}, err
 		}
 
 		if !recordsExist {
@@ -65,19 +76,24 @@ func GenerateReport(date string) (map[string]map[string]float64, error) {
 		lakeDatas, err = models.GetDBRecordsFor(date, dataSourceType)
 		if err != nil {
 			fmt.Printf("GetDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
-			return nil, err
+			return ReportOutput{}, err
 		}
 
 		meanValue := lakeDatas.Mean()
 		medianValue := lakeDatas.Median()
 
-		reportValues[dataSourceType] = map[string]float64{
-			MEAN   : meanValue,
-			MEDIAN : medianValue,
+		reportValues[dataSourceType] = ReportData{
+			Mean   : meanValue,
+			Median : medianValue,
 		}
 	}
 
-	return reportValues, nil
+	reportOutput := ReportOutput{
+		Date: date,
+		ReportData:reportValues,
+	}
+
+	return reportOutput, nil
 
 }
 
