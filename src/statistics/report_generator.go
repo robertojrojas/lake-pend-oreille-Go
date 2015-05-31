@@ -5,7 +5,17 @@ import (
 	"fmt"
 	"net/http"
 	"encoding/json"
+	"strings"
 )
+
+const (
+	MEAN   = "mean"
+	MEDIAN = "median"
+)
+
+var INVALID_URL = map[string]string{
+	"Error": "Invalid URL",
+}
 
 func GenerateReportDisplay(date string) {
 
@@ -20,21 +30,21 @@ func GenerateReportDisplay(date string) {
 	fmt.Printf("================================================================ \n")
 	fmt.Printf("        Air Temperature    Barometric Pressuare   Wind Speed     \n")
     fmt.Printf("  MEAN     %.2f                %.2f                %.2f          \n",
-		              reportValues[models.DATASOURCE_TYPES[0]][0],
-		              reportValues[models.DATASOURCE_TYPES[1]][0],
-		              reportValues[models.DATASOURCE_TYPES[2]][0]                   )
+		              reportValues[models.DATASOURCE_TYPES[0]][MEAN],
+		              reportValues[models.DATASOURCE_TYPES[1]][MEAN],
+		              reportValues[models.DATASOURCE_TYPES[2]][MEAN]                   )
 	fmt.Printf(" MEDIAN    %.2f                %.2f                %.2f           \n",
-					  reportValues[models.DATASOURCE_TYPES[0]][1],
-					  reportValues[models.DATASOURCE_TYPES[1]][1],
-					  reportValues[models.DATASOURCE_TYPES[2]][1]   )
+					  reportValues[models.DATASOURCE_TYPES[0]][MEDIAN],
+					  reportValues[models.DATASOURCE_TYPES[1]][MEDIAN],
+					  reportValues[models.DATASOURCE_TYPES[2]][MEDIAN]   )
 	fmt.Printf("================================================================ \n")
 
 
 }
 
-func GenerateReport(date string) (map[string][]float64, error) {
+func GenerateReport(date string) (map[string]map[string]float64, error) {
 
-	reportValues := map[string][]float64{}
+	reportValues := map[string]map[string]float64{}
 
 	for _, dataSourceType := range models.DATASOURCE_TYPES {
 
@@ -61,9 +71,9 @@ func GenerateReport(date string) (map[string][]float64, error) {
 		meanValue := lakeDatas.Mean()
 		medianValue := lakeDatas.Median()
 
-		reportValues[dataSourceType] = []float64{
-			meanValue,
-			medianValue,
+		reportValues[dataSourceType] = map[string]float64{
+			MEAN   : meanValue,
+			MEDIAN : medianValue,
 		}
 	}
 
@@ -71,22 +81,37 @@ func GenerateReport(date string) (map[string][]float64, error) {
 
 }
 
+
 func reportHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	date := r.Form["date"][0]
+
+	path := r.URL.Path
+	pathParts := strings.Split(path, "/")
+
+	if len(pathParts) != 3 {
+		generateJson(w, INVALID_URL)
+		return
+	}
+
+	date := pathParts[2]
 
 	p, err := GenerateReport(date)
 	if err != nil {
+		fmt.Printf("Error parsing the %s\n", err)
 		http.Error(w, "File not found", http.StatusInternalServerError)
 	} else {
-		jsonEnc := json.NewEncoder(w)
-		jsonEnc.Encode(p)
+		generateJson(w, p)
 	}
 }
 
+func generateJson(w http.ResponseWriter, data interface{}) {
+	jsonEnc := json.NewEncoder(w)
+	jsonEnc.Encode(data)
+}
+
+
 
 func CreateServer() {
-	http.HandleFunc("/reports", reportHandler)
+	http.HandleFunc("/reports/", reportHandler)
 	http.ListenAndServe(":8888", nil)
 }
 
