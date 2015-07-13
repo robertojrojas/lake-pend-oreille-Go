@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 	"os"
+	"io"
 )
 
 const (
@@ -32,16 +33,16 @@ var INVALID_URL = map[string]string{
 }
 
 type ReportData struct {
-	Mean float64
+	Mean   float64
 	Median float64
 }
 
 
 type ReportOutput struct {
-	ReportDate string
-	AirTemp ReportData
-	Barometric ReportData
-	WinSpeed ReportData
+	ReportDate  string
+	AirTemp     ReportData
+	Barometric  ReportData
+	WinSpeed    ReportData
 }
 
 func GenerateReportDisplay(date string) {
@@ -130,11 +131,32 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func generateJson(w http.ResponseWriter, data interface{}) {
+/*
+   ##########################
+         Sample JSON
+   ##########################
+   {
+      "ReportDate":"2014-01-01",
+      "AirTemp":{
+         "Mean":36.18,
+         "Median":36.3
+      },
+      "Barometric":{
+          "Mean":28.26,
+          "Median":28.3
+      },
+      "WinSpeed":{
+          "Mean":3.89,
+          "Median":2.8
+      }
+    }
+   ##########################
+
+*/
+func generateJson(w io.Writer, data interface{}) {
 	jsonEnc := json.NewEncoder(w)
 	jsonEnc.Encode(data)
 }
-
 
 
 func CreateServer() {
