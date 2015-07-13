@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"encoding/json"
 	"strings"
+	"text/template"
+	"os"
 )
 
 const (
@@ -13,6 +15,17 @@ const (
 	MEDIAN = "median"
 	DATE_FIELD = "date"
 )
+
+
+const REPORT_TEMPLATE = `
+================================================================
+	STATISTICAL ANALYSIS For {{.ReportDate}}
+================================================================
+	  Air Temperature   Barometric Pressuare    Wind Speed
+  MEAN		 {{.AirTemp.Mean}}		{{.Barometric.Mean}}		     {{.WinSpeed.Mean}}
+ MEDIAN		 {{.AirTemp.Median}}		{{.Barometric.Median}}		     {{.WinSpeed.Median}}
+================================================================
+	`
 
 var INVALID_URL = map[string]string{
 	"Error": "Invalid URL",
@@ -23,9 +36,12 @@ type ReportData struct {
 	Median float64
 }
 
+
 type ReportOutput struct {
-	Date string
-	ReportData map[string]ReportData
+	ReportDate string
+	AirTemp ReportData
+	Barometric ReportData
+	WinSpeed ReportData
 }
 
 func GenerateReportDisplay(date string) {
@@ -35,27 +51,22 @@ func GenerateReportDisplay(date string) {
 	if err != nil {
 		panic(err)
 	}
-	reportValues := reportOutput.ReportData
-	fmt.Printf("================================================================ \n")
-	fmt.Printf("            STATISTICAL ANALYSIS For %s  \n", reportOutput.Date     )
-	fmt.Printf("================================================================ \n")
-	fmt.Printf("        Air Temperature    Barometric Pressuare   Wind Speed     \n")
-    fmt.Printf("  MEAN     %.2f                %.2f                %.2f          \n",
-		              reportValues[models.DATASOURCE_TYPES[0]].Mean,
-		              reportValues[models.DATASOURCE_TYPES[1]].Mean,
-		              reportValues[models.DATASOURCE_TYPES[2]].Mean                   )
-	fmt.Printf(" MEDIAN    %.2f                %.2f                %.2f           \n",
-					  reportValues[models.DATASOURCE_TYPES[0]].Median,
-					  reportValues[models.DATASOURCE_TYPES[1]].Median,
-					  reportValues[models.DATASOURCE_TYPES[2]].Median   )
-	fmt.Printf("================================================================ \n")
+
+	t := template.Must(template.New("letter").Parse(REPORT_TEMPLATE))
+
+	err = t.Execute(os.Stdout, reportOutput)
+	if err != nil {
+		panic(err)
+	}
 
 
 }
 
 func GenerateReport(date string) (ReportOutput, error) {
 
-	reportValues := map[string]ReportData{}
+	reportOutput := ReportOutput{
+		ReportDate: date,
+	}
 
 	for _, dataSourceType := range models.DATASOURCE_TYPES {
 
@@ -79,19 +90,19 @@ func GenerateReport(date string) (ReportOutput, error) {
 			return ReportOutput{}, err
 		}
 
-		meanValue := lakeDatas.Mean()
+		meanValue   := lakeDatas.Mean()
 		medianValue := lakeDatas.Median()
 
-		reportValues[dataSourceType] = ReportData{
-			Mean   : meanValue,
-			Median : medianValue,
+		switch dataSourceType {
+		    case models.AirTemp:
+				reportOutput.AirTemp    = ReportData{Mean:meanValue, Median:medianValue}
+			case models.BarometricPress:
+				reportOutput.Barometric = ReportData{Mean:meanValue, Median:medianValue}
+			case models.Wind_Speed:
+				reportOutput.WinSpeed   = ReportData{Mean:meanValue, Median:medianValue}
 		}
 	}
 
-	reportOutput := ReportOutput{
-		Date: date,
-		ReportData:reportValues,
-	}
 
 	return reportOutput, nil
 

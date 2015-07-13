@@ -15,10 +15,17 @@ const (
 	ROOT_URL = "http://lpo.dt.navy.mil/data/DM/%s/%s/%s"
 )
 
+
+const (
+	AirTemp         = "Air_Temp"
+	BarometricPress = "Barometric_Press"
+	Wind_Speed      = "Wind_Speed"
+)
+
 var DATASOURCE_TYPES = []string {
-"Air_Temp",
-"Barometric_Press",
-"Wind_Speed",
+	AirTemp,
+	BarometricPress,
+	Wind_Speed,
 }
 
 
@@ -78,6 +85,7 @@ func (records DataRecs) Mean() (float64) {
 	}
 
 	meanValue := total / float64(len(records))
+	meanValue = fromStringToFloat(fmt.Sprintf("%.2f", meanValue))
 	return meanValue
 }
 
@@ -121,6 +129,8 @@ func (records DataRecs) Median() (float64) {
 		medianValue = fromStringToFloat(records[idx].RecordedValue)
 		//fmt.Printf("Meian value is %f \n", medianValue)
 	}
+
+	medianValue = fromStringToFloat(fmt.Sprintf("%.2f", medianValue))
 
 	return medianValue
 }
