@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"os"
 	"io"
+	"sync"
 )
 
 const (
@@ -69,43 +70,60 @@ func GenerateReport(date string) (ReportOutput, error) {
 		ReportDate: date,
 	}
 
+	// Create an unbuffered channel to receive match results to display.
+	results := make(chan *models.DataRecs)
+
+	// Setup a wait group so we can process all the statistics data.
+	var waitGroup sync.WaitGroup
+
+	// Set the number of goroutines we need to wait for while
+	// they process the individual statistic data.
+	waitGroup.Add(len(models.DATASOURCE_TYPES))
+
 	for _, dataSourceType := range models.DATASOURCE_TYPES {
 
-		var lakeDatas models.DataRecs
+		// Launch the goroutine to perform the statistics data retrieval.
+		go func (theDate string, theDataSourceType string) {
+			models.GetStatisticDataFor(theDate, theDataSourceType, results)
+			fmt.Printf("Done getting data for %s\n", theDataSourceType)
+			waitGroup.Done()
+		}(date, dataSourceType)
 
-		//fmt.Printf("Checking records for %s %s \n", date, dataSourceType)
-		recordsExist, err := models.CheckDBRecordsFor(date, dataSourceType)
 
-		if err != nil {
-			fmt.Printf("CheckDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
-			return ReportOutput{}, err
-		}
-
-		if !recordsExist {
-			models.FetchData(date, dataSourceType)
-		}
-
-		lakeDatas, err = models.GetDBRecordsFor(date, dataSourceType)
-		if err != nil {
-			fmt.Printf("GetDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
-			return ReportOutput{}, err
-		}
-
-		meanValue   := lakeDatas.Mean()
-		medianValue := lakeDatas.Median()
-
-		switch dataSourceType {
-		    case models.AirTemp:
-				reportOutput.AirTemp    = ReportData{Mean:meanValue, Median:medianValue}
-			case models.BarometricPress:
-				reportOutput.Barometric = ReportData{Mean:meanValue, Median:medianValue}
-			case models.Wind_Speed:
-				reportOutput.WinSpeed   = ReportData{Mean:meanValue, Median:medianValue}
-		}
 	}
 
+	// Launch a goroutine to monitor when all the work is done.
+	go func() {
+		// Wait for everything to be processed.
+		waitGroup.Wait()
+
+		// Close the channel to signal to the Display
+		// function that we can exit the program.
+		close(results)
+	}()
+
+	collectReportData(&reportOutput, results)
 
 	return reportOutput, nil
+
+}
+
+func collectReportData(reportOutput *ReportOutput, results chan *models.DataRecs) {
+	// Now collect all the data
+	for lakeDataRecord := range results {
+
+		meanValue   := lakeDataRecord.Mean()
+		medianValue := lakeDataRecord.Median()
+
+		switch lakeDataRecord.GetDataSource() {
+		case models.AirTemp:
+			reportOutput.AirTemp    = ReportData{Mean:meanValue, Median:medianValue}
+		case models.BarometricPress:
+			reportOutput.Barometric = ReportData{Mean:meanValue, Median:medianValue}
+		case models.Wind_Speed:
+			reportOutput.WinSpeed   = ReportData{Mean:meanValue, Median:medianValue}
+		}
+	}
 
 }
 

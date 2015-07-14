@@ -33,5 +33,10 @@ type MedianCalculation interface {
 }
 
 
+type DataSource interface {
+	GetDataSource() string
+}
+
+
 
 

@@ -135,6 +135,15 @@ func (records DataRecs) Median() (float64) {
 	return medianValue
 }
 
+func (records DataRecs) GetDataSource() string {
+
+	if len(records) > 0 {
+		return records[0].DataSource
+	} else {
+		return ""
+	}
+}
+
 /*
 	 #####  sort.Interface Impl ######
 */
@@ -220,6 +229,33 @@ func ParseData(dataSourceType string, rawData string) (DataRecs) {
 	}
 
 	return parsedData
+
+}
+
+func GetStatisticDataFor(date string, dataSourceType string, results chan<- *DataRecs ) {
+
+	var lakeDatas DataRecs
+
+	//fmt.Printf("Checking records for %s %s \n", date, dataSourceType)
+	recordsExist, err := CheckDBRecordsFor(date, dataSourceType)
+
+	if err != nil {
+		fmt.Printf("CheckDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
+		panic(err)
+	}
+
+	if !recordsExist {
+		FetchData(date, dataSourceType)
+	}
+
+	lakeDatas, err = GetDBRecordsFor(date, dataSourceType)
+	if err != nil {
+		fmt.Printf("GetDBRecordsFor - Problems checking Records for %s %s \n", date, dataSourceType)
+		panic(err)
+	}
+
+	results <- &lakeDatas
+
 
 }
 
