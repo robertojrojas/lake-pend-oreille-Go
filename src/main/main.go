@@ -3,9 +3,12 @@ package main
 import (
 	"os"
 	"statistics"
+	"runtime"
 )
 
 func main() {
+
+	runtime.GOMAXPROCS(3)
 
 	var dateParam string
 
